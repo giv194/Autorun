@@ -94,35 +94,40 @@ def main():
   lcd_init()
 
   while True:
+    ref_time = datetime.datetime.now()
     now = datetime.datetime.now()
-    ref_sec = now.second
-    while (now.second - ref_sec < 10):
+    while ((now -ref_time).total_seconds() < 5):
         now = datetime.datetime.now()
         lcd_string(str(now.month)+"/"+str(now.day)+"/"+str(now.year), LCD_LINE_1)
         lcd_string(str(now.hour) +":"+str(now.minute)+":"+str(now.second), LCD_LINE_2)
-    baseurl = "https://query.yahooapis.com/v1/public/yql?"
-    yql_query = "select * from weather.forecast where woeid=2427936"
-    yql_url = baseurl + urllib.urlencode({'q':yql_query}) + "&format=json"
-    result = urllib2.urlopen(yql_url).read()
-    data = json.loads(result)
-    for day in data['query']['results']['channel']['item']['forecast']:
-        date = day['date'].split(' ')
-        first_line = str(list(calendar.month_abbr).index(date[1])) + "/" + date[0] + " " + day['day']
-        for i in range(len(first_line), 11):
-            first_line += " "
-        first_line = first_line + "H:" + day['high'] + "'"
-        second_line = ""
-        if "Partly Cloudy" != day['text'] and "Sunny" != day['text']:
-            if int(day['low']) < 32:
-                second_line = "Snowy"
-            else:
-                second_line = "Rainy"
-        for i in range(len(second_line), 11):
-            second_line += " "
-        second_line = second_line + "L:" + day['low'] + "'"
-        lcd_string(first_line, LCD_LINE_1)
-        lcd_string(second_line, LCD_LINE_2)
-        time.sleep(2)
+    try:
+        baseurl = "https://query.yahooapis.com/v1/public/yql?"
+        yql_query = "select * from weather.forecast where woeid=2427936"
+        yql_url = baseurl + urllib.urlencode({'q':yql_query}) + "&format=json"
+        result = urllib2.urlopen(yql_url).read()
+        data = json.loads(result)
+        for day in data['query']['results']['channel']['item']['forecast']:
+            date = day['date'].split(' ')
+            first_line = str(list(calendar.month_abbr).index(date[1])) + "/" + date[0] + " " + day['day']
+            for i in range(len(first_line), 11):
+                first_line += " "
+            first_line = first_line + "H:" + day['high'] + "'"
+            second_line = ""
+            if "Partly Cloudy" != day['text'] and "Sunny" != day['text']:
+                if int(day['low']) < 32:
+                    second_line = "Snowy"
+                else:
+                    second_line = "Rainy"
+            for i in range(len(second_line), 11):
+                second_line += " "
+            second_line = second_line + "L:" + day['low'] + "'"
+            lcd_string(first_line, LCD_LINE_1)
+            lcd_string(second_line, LCD_LINE_2)
+            time.sleep(2)
+    except:
+        lcd_string("Weather is", LCD_LINE_1)
+        lcd_string("Unavailable", LCD_LINE_2)
+        time.sleep(5)
 
 def lcd_init():
   # Initialise display
